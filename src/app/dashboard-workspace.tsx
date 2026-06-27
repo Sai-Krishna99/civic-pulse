@@ -5,7 +5,6 @@ import {
   ArrowUpRight,
   Bell,
   Building2,
-  CheckCircle2,
   Clock3,
   Filter,
   HeartHandshake,
@@ -13,15 +12,19 @@ import {
   Radio,
   RefreshCcw,
   Search,
-  ShieldCheck,
   Siren,
   ThermometerSun,
   UsersRound
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useFormStatus } from "react-dom";
-import { createReferral, updateProviderCapacity } from "@/app/actions";
+import {
+  createDemoNeed,
+  routeIncomingNeed,
+  updateProviderCapacity
+} from "@/app/actions";
 import type { DashboardData } from "@/lib/dashboard-data";
+import { rankProviders } from "@/lib/routing";
 import styles from "./page.module.css";
 
 const status_labels: Record<string, string> = {
@@ -33,25 +36,29 @@ const status_labels: Record<string, string> = {
 
 const referral_filters = ["All", "Active", "Rerouting", "Completed"] as const;
 const provider_filters = ["all", "open", "filling", "full", "stale"] as const;
-const need_categories = ["Food", "Cooling", "Clinic", "Legal", "Transit"] as const;
 
 type ProviderFilter = (typeof provider_filters)[number];
 type ReferralFilter = (typeof referral_filters)[number];
-type NeedCategory = (typeof need_categories)[number];
 
 type DashboardWorkspaceProps = {
   data: DashboardData;
 };
 
 export function DashboardWorkspace({ data }: DashboardWorkspaceProps) {
-  const { services, neighborhoods, referrals, providerUpdates } = data;
+  const {
+    services,
+    neighborhoods,
+    incomingNeeds,
+    referrals,
+    routingDecisions,
+    providerUpdates
+  } = data;
   const [activeSection, setActiveSection] = useState("command");
   const [providerFilter, setProviderFilter] = useState<ProviderFilter>("all");
   const [referralFilter, setReferralFilter] = useState<ReferralFilter>("Active");
   const [riskOnly, setRiskOnly] = useState(false);
   const [query, setQuery] = useState("");
-  const [needCategory, setNeedCategory] = useState<NeedCategory>("Food");
-  const [selectedProviderId, setSelectedProviderId] = useState("");
+  const [selectedNeedId, setSelectedNeedId] = useState("");
 
   const total_capacity = services.reduce((sum, service) => sum + service.capacity, 0);
   const available_capacity = services.reduce(
@@ -61,6 +68,7 @@ export function DashboardWorkspace({ data }: DashboardWorkspaceProps) {
   const active_referrals = referrals.filter(
     (referral) => referral.status !== "Completed"
   ).length;
+  const openNeeds = incomingNeeds.filter((need) => need.status === "open");
 
   const filteredServices = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -95,19 +103,11 @@ export function DashboardWorkspace({ data }: DashboardWorkspaceProps) {
     ? neighborhoods.filter((neighborhood) => neighborhood.risk === "high")
     : neighborhoods;
 
-  const recommendedService = useMemo(() => {
-    const availableServices = services
-      .filter((service) => service.available > 0)
-      .sort((left, right) => right.available - left.available);
-
-    return (
-      availableServices.find((service) => serviceMatchesNeed(service.serviceType, needCategory)) ??
-      availableServices[0] ??
-      services[0]
-    );
-  }, [needCategory, services]);
-
-  const selectedProvider = selectedProviderId || recommendedService?.id || services[0]?.id || "";
+  const selectedNeed =
+    openNeeds.find((need) => need.id === selectedNeedId) ?? openNeeds[0];
+  const rankedCandidates = selectedNeed
+    ? rankProviders(selectedNeed, services).slice(0, 3)
+    : [];
 
   function scrollToSection(sectionId: string) {
     setActiveSection(sectionId);
@@ -143,7 +143,7 @@ export function DashboardWorkspace({ data }: DashboardWorkspaceProps) {
             type="button"
             onClick={() => scrollToSection("finder")}
           >
-            <Siren size={18} /> Intake
+            <Siren size={18} /> Needs desk
           </button>
           <button
             className={activeSection === "providers" ? styles.nav_active : undefined}
@@ -192,16 +192,16 @@ export function DashboardWorkspace({ data }: DashboardWorkspaceProps) {
               <Bell size={18} />
             </button>
             <button className={styles.primary_button} type="button" onClick={() => scrollToSection("finder")}>
-              <Siren size={18} /> Open intake
+              <Siren size={18} /> Open needs
             </button>
           </div>
         </header>
 
         <section className={styles.metrics} aria-label="Network summary">
           <Metric label="Available seats and kits" value={available_capacity.toString()} trend={`${total_capacity} total capacity`} />
+          <Metric label="Incoming needs" value={openNeeds.length.toString()} trend="waiting for routing" />
           <Metric label="Active referrals" value={active_referrals.toString()} trend={`${referrals.length} tracked cases`} />
-          <Metric label="Verified today" value="84%" trend="18 providers checked in" />
-          <Metric label="At-risk neighborhoods" value="3" trend="capacity below demand" />
+          <Metric label="Routing decisions" value={routingDecisions.length.toString()} trend="auditable handoffs" />
         </section>
 
         <section className={styles.command_grid} id="command">
@@ -242,61 +242,80 @@ export function DashboardWorkspace({ data }: DashboardWorkspaceProps) {
           <div className={styles.finder_panel} id="finder">
             <div className={styles.panel_header}>
               <div>
-                <p className={styles.eyebrow}>Guided intake</p>
-                <h2>Create a referral and route it to a live provider.</h2>
+                <p className={styles.eyebrow}>Incoming needs</p>
+                <h2>Select a case and route it with current capacity.</h2>
               </div>
-              <ShieldCheck size={22} />
+              <form action={createDemoNeed}>
+                <SubmitDemoNeedButton />
+              </form>
             </div>
-            <form action={createReferral} className={styles.referral_form}>
-              <label>
-                <span>Person</span>
-                <input name="person" defaultValue="S. Morgan" required />
-              </label>
-              <label>
-                <span>Need</span>
-                <select
-                  name="needCategory"
-                  value={needCategory}
-                  onChange={(event) => {
-                    setNeedCategory(event.target.value as NeedCategory);
-                    setSelectedProviderId("");
-                  }}
-                >
-                  {need_categories.map((category) => (
-                    <option key={category}>{category}</option>
-                  ))}
-                </select>
-              </label>
-              <label className={styles.full_width}>
-                <span>Situation</span>
-                <textarea
-                  name="need"
-                  defaultValue="Needs same-day help near 78702 and cannot drive."
-                  required
-                />
-              </label>
-              <label className={styles.full_width}>
-                <span>Route to</span>
-                <select
-                  name="ownerProviderId"
-                  value={selectedProvider}
-                  onChange={(event) => setSelectedProviderId(event.target.value)}
-                >
-                  {services.map((service) => (
-                    <option key={service.id} value={service.id}>
-                      {service.name} - {service.available} available
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <div className={styles.match_result}>
-                <CheckCircle2 size={18} />
-                <span>
-                  Recommended: {recommendedService?.name ?? "No available provider"}
-                </span>
+            <div className={styles.routing_desk}>
+              <div className={styles.need_queue}>
+                {openNeeds.map((need) => (
+                  <button
+                    className={`${styles.need_card} ${
+                      selectedNeed?.id === need.id ? styles.need_card_active : ""
+                    }`}
+                    key={need.id}
+                    type="button"
+                    onClick={() => setSelectedNeedId(need.id)}
+                  >
+                    <span>{need.time} waiting</span>
+                    <strong>{need.person}</strong>
+                    <p>{need.summary}</p>
+                    <small>
+                      {need.needCategory} - {need.neighborhood} - {need.urgency}
+                    </small>
+                  </button>
+                ))}
+                {openNeeds.length === 0 ? (
+                  <EmptyState message="No incoming needs are waiting." />
+                ) : null}
               </div>
-              <SubmitReferralButton />
-            </form>
+
+              <div className={styles.routing_panel}>
+                {selectedNeed ? (
+                  <>
+                    <div className={styles.selected_need}>
+                      <span>{selectedNeed.needCategory} request</span>
+                      <strong>{selectedNeed.person}</strong>
+                      <p>{selectedNeed.summary}</p>
+                      <small>{selectedNeed.constraints}</small>
+                    </div>
+                    <div className={styles.candidate_list}>
+                      {rankedCandidates.map((candidate, index) => (
+                        <article className={styles.candidate} key={candidate.service.id}>
+                          <div>
+                            <span>Option {index + 1}</span>
+                            <strong>{candidate.service.name}</strong>
+                            <p>
+                              {candidate.service.neighborhood} - {candidate.service.serviceType}
+                            </p>
+                          </div>
+                          <span className={styles.score_badge}>{candidate.score}</span>
+                          <ul>
+                            {candidate.reasons.slice(0, 4).map((reason) => (
+                              <li key={reason}>{reason}</li>
+                            ))}
+                          </ul>
+                          <form action={routeIncomingNeed}>
+                            <input type="hidden" name="needId" value={selectedNeed.id} />
+                            <input
+                              type="hidden"
+                              name="providerId"
+                              value={candidate.service.id}
+                            />
+                            <SubmitRouteButton disabled={candidate.service.available <= 0} />
+                          </form>
+                        </article>
+                      ))}
+                    </div>
+                  </>
+                ) : (
+                  <EmptyState message="Add an incoming need to generate a route recommendation." />
+                )}
+              </div>
+            </div>
           </div>
         </section>
 
@@ -462,20 +481,26 @@ function Metric({
   );
 }
 
-function SubmitReferralButton() {
+function SubmitDemoNeedButton() {
   const { pending } = useFormStatus();
 
   return (
-    <button className={styles.primary_button} disabled={pending} type="submit">
-      Create referral <ArrowUpRight size={18} />
+    <button className={styles.ghost_button} disabled={pending} type="submit">
+      {pending ? "Adding..." : "Add live need"}
+    </button>
+  );
+}
+
+function SubmitRouteButton({ disabled }: { disabled: boolean }) {
+  const { pending } = useFormStatus();
+
+  return (
+    <button className={styles.primary_button} disabled={disabled || pending} type="submit">
+      {pending ? "Routing..." : "Route referral"} <ArrowUpRight size={18} />
     </button>
   );
 }
 
 function EmptyState({ message }: { message: string }) {
   return <p className={styles.empty_state}>{message}</p>;
-}
-
-function serviceMatchesNeed(serviceType: string, needCategory: NeedCategory) {
-  return serviceType.toLowerCase().includes(needCategory.toLowerCase());
 }

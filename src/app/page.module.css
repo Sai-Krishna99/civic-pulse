@@ -206,6 +206,14 @@
   color: #ffffff !important;
 }
 
+.ghost_button {
+  min-height: 36px !important;
+  border-color: var(--green) !important;
+  background: var(--green-soft) !important;
+  color: var(--green) !important;
+  white-space: nowrap;
+}
+
 .filter_active {
   border-color: var(--green) !important;
   background: var(--green-soft) !important;
@@ -406,6 +414,119 @@
   color: var(--green);
   font-weight: 900;
   padding: 12px;
+}
+
+.routing_desk {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: 14px;
+  padding: 0 18px 18px;
+}
+
+.need_queue,
+.candidate_list {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+}
+
+.need_card {
+  display: grid;
+  gap: 6px;
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #ffffff;
+  color: var(--ink);
+  cursor: pointer;
+  padding: 12px;
+  text-align: left;
+}
+
+.need_card:hover,
+.need_card_active {
+  border-color: var(--green);
+  background: #f4faf5;
+}
+
+.need_card span,
+.need_card small,
+.selected_need span,
+.selected_need small,
+.candidate span,
+.candidate p {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.need_card strong,
+.need_card p,
+.selected_need strong,
+.selected_need p {
+  margin: 0;
+}
+
+.need_card p,
+.selected_need p,
+.candidate p {
+  line-height: 1.35;
+}
+
+.routing_panel {
+  display: grid;
+  gap: 12px;
+  align-content: start;
+}
+
+.selected_need {
+  display: grid;
+  gap: 7px;
+  border: 1px solid #d8e8dc;
+  border-radius: 8px;
+  background: #f7fbf6;
+  padding: 14px;
+}
+
+.candidate {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 14px;
+}
+
+.candidate ul {
+  display: grid;
+  grid-column: 1 / -1;
+  gap: 5px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 750;
+  padding-left: 18px;
+}
+
+.candidate form {
+  grid-column: 1 / -1;
+}
+
+.candidate .primary_button {
+  width: 100%;
+}
+
+.score_badge {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border-radius: 8px;
+  background: var(--ink);
+  color: #ffffff !important;
+  font-size: 14px !important;
+  font-weight: 900 !important;
 }
 
 .lower_grid {
@@ -697,6 +818,10 @@
   }
 
   .command_grid {
+    grid-template-columns: 1fr;
+  }
+
+  .routing_desk {
     grid-template-columns: 1fr;
   }
 }

@@ -2,10 +2,12 @@ import { loadEnvConfig } from "@next/env";
 import postgres from "postgres";
 import { drizzle } from "drizzle-orm/postgres-js";
 import {
+  incomingNeeds,
   neighborhoodSignals,
   providerUpdates,
   providers,
   referrals,
+  routingDecisions,
   serviceCapacities
 } from "../src/db/schema";
 
@@ -24,8 +26,10 @@ const now = new Date();
 const minutesAgo = (minutes: number) => new Date(now.getTime() - minutes * 60000);
 
 async function main() {
+  await db.delete(routingDecisions);
   await db.delete(providerUpdates);
   await db.delete(referrals);
+  await db.delete(incomingNeeds);
   await db.delete(serviceCapacities);
   await db.delete(neighborhoodSignals);
   await db.delete(providers);
@@ -160,6 +164,53 @@ async function main() {
       need: "Walk-in clinic availability after 5 PM",
       status: "Completed",
       ownerProviderId: getProviderId(providerByName, "Riverside Family Clinic")
+    }
+  ]);
+
+  await db.insert(incomingNeeds).values([
+    {
+      id: "need-maria-santos",
+      person: "Maria Santos",
+      needCategory: "Cooling",
+      neighborhood: "Govalle",
+      urgency: "critical",
+      summary: "Grandmother reports no AC and dizziness during heat advisory.",
+      constraints: "No vehicle; can walk short distance; Spanish preferred",
+      status: "open",
+      createdAt: minutesAgo(2)
+    },
+    {
+      id: "need-kim-family",
+      person: "Kim family",
+      needCategory: "Food",
+      neighborhood: "Chestnut",
+      urgency: "high",
+      summary: "Parent with two children needs food pickup before evening shift.",
+      constraints: "No vehicle; needs child-friendly pickup window",
+      status: "open",
+      createdAt: minutesAgo(6)
+    },
+    {
+      id: "need-jordan-lee",
+      person: "Jordan Lee",
+      needCategory: "Legal",
+      neighborhood: "North Loop",
+      urgency: "high",
+      summary: "Tenant received eviction notice and needs same-day intake.",
+      constraints: "Phone only; cannot travel before 5 PM",
+      status: "open",
+      createdAt: minutesAgo(11)
+    }
+  ]);
+
+  await db.insert(routingDecisions).values([
+    {
+      id: "route-seed-kim-family",
+      incomingNeedId: "need-kim-family",
+      providerId: getProviderId(providerByName, "Hope Food Pantry"),
+      score: 82,
+      reasons: "matches food need; same neighborhood: Chestnut; 9 available",
+      createdAt: minutesAgo(5)
     }
   ]);
 

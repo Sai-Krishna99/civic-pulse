@@ -1,16 +1,20 @@
 import { desc, eq } from "drizzle-orm";
 import { getDb } from "@/db/client";
 import {
+  incomingNeeds,
   neighborhoodSignals,
   providerUpdates as providerUpdatesTable,
   providers,
   referrals as referralsTable,
+  routingDecisions,
   serviceCapacities
 } from "@/db/schema";
 import {
+  incomingNeeds as fallbackIncomingNeeds,
   neighborhoods as fallbackNeighborhoods,
   providerUpdates as fallbackProviderUpdates,
   referrals as fallbackReferrals,
+  routingDecisions as fallbackRoutingDecisions,
   services as fallbackServices
 } from "@/lib/demo-data";
 
@@ -21,7 +25,9 @@ export async function getDashboardData() {
     return {
       services: fallbackServices,
       neighborhoods: fallbackNeighborhoods,
+      incomingNeeds: fallbackIncomingNeeds,
       referrals: fallbackReferrals,
+      routingDecisions: fallbackRoutingDecisions,
       providerUpdates: fallbackProviderUpdates,
       source: "seed-file" as const
     };
@@ -66,13 +72,39 @@ export async function getDashboardData() {
 
   const signalRows = await db.select().from(neighborhoodSignals);
 
+  const needRows = await db
+    .select()
+    .from(incomingNeeds)
+    .orderBy(desc(incomingNeeds.createdAt));
+
+  const decisionRows = await db
+    .select({
+      id: routingDecisions.id,
+      incomingNeedId: routingDecisions.incomingNeedId,
+      provider: providers.name,
+      score: routingDecisions.score,
+      reasons: routingDecisions.reasons,
+      createdAt: routingDecisions.createdAt
+    })
+    .from(routingDecisions)
+    .innerJoin(providers, eq(routingDecisions.providerId, providers.id))
+    .orderBy(desc(routingDecisions.createdAt));
+
   return {
     services: serviceRows.map((service) => ({
       ...service,
       verified: formatRelativeMinutes(service.verifiedAt)
     })),
     neighborhoods: signalRows,
+    incomingNeeds: needRows.map((need) => ({
+      ...need,
+      time: formatRelativeMinutes(need.createdAt)
+    })),
     referrals: referralRows,
+    routingDecisions: decisionRows.map((decision) => ({
+      ...decision,
+      time: formatRelativeMinutes(decision.createdAt)
+    })),
     providerUpdates: updateRows.map((update) => ({
       ...update,
       time: formatRelativeMinutes(update.happenedAt)

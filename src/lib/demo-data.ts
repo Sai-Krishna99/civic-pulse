@@ -97,6 +97,52 @@ export const referrals = [
   }
 ];
 
+export const incomingNeeds = [
+  {
+    id: "need-maria-santos",
+    person: "Maria Santos",
+    needCategory: "Cooling",
+    neighborhood: "Govalle",
+    urgency: "critical",
+    summary: "Grandmother reports no AC and dizziness during heat advisory.",
+    constraints: "No vehicle; can walk short distance; Spanish preferred",
+    status: "open",
+    time: "2m"
+  },
+  {
+    id: "need-kim-family",
+    person: "Kim family",
+    needCategory: "Food",
+    neighborhood: "Chestnut",
+    urgency: "high",
+    summary: "Parent with two children needs food pickup before evening shift.",
+    constraints: "No vehicle; needs child-friendly pickup window",
+    status: "open",
+    time: "6m"
+  },
+  {
+    id: "need-jordan-lee",
+    person: "Jordan Lee",
+    needCategory: "Legal",
+    neighborhood: "North Loop",
+    urgency: "high",
+    summary: "Tenant received eviction notice and needs same-day intake.",
+    constraints: "Phone only; cannot travel before 5 PM",
+    status: "open",
+    time: "11m"
+  }
+];
+
+export const routingDecisions = [
+  {
+    id: "route-seed-kim-family",
+    incomingNeedId: "need-kim-family",
+    provider: "Hope Food Pantry",
+    score: 82,
+    reasons: "matches food need; same neighborhood: Chestnut; 9 available"
+  }
+];
+
 export const providerUpdates = [
   {
     id: "upd-hope-food-pantry",
