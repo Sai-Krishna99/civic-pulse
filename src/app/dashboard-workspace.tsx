@@ -108,6 +108,7 @@ export function DashboardWorkspace({ data }: DashboardWorkspaceProps) {
   const rankedCandidates = selectedNeed
     ? rankProviders(selectedNeed, services).slice(0, 3)
     : [];
+  const latestDecision = routingDecisions[0];
 
   function scrollToSection(sectionId: string) {
     setActiveSection(sectionId);
@@ -174,8 +175,11 @@ export function DashboardWorkspace({ data }: DashboardWorkspaceProps) {
       <section className={styles.content}>
         <header className={styles.topbar}>
           <div>
-            <p className={styles.eyebrow}>Austin mutual aid network</p>
-            <h1>Route people to help that is actually available.</h1>
+            <p className={styles.eyebrow}>Austin heat response desk</p>
+            <h1>Move every urgent request to confirmed help.</h1>
+            <p className={styles.subhead}>
+              Select an incoming need, review explainable routing options, and create an auditable handoff from live capacity.
+            </p>
           </div>
           <div className={styles.actions}>
             <button type="button" aria-label="Refresh live capacity" onClick={() => window.location.reload()}>
@@ -242,8 +246,8 @@ export function DashboardWorkspace({ data }: DashboardWorkspaceProps) {
           <div className={styles.finder_panel} id="finder">
             <div className={styles.panel_header}>
               <div>
-                <p className={styles.eyebrow}>Incoming needs</p>
-                <h2>Select a case and route it with current capacity.</h2>
+                <p className={styles.eyebrow}>Incident routing desk</p>
+                <h2>Route the next waiting case.</h2>
               </div>
               <form action={createDemoNeed}>
                 <SubmitDemoNeedButton />
@@ -276,6 +280,16 @@ export function DashboardWorkspace({ data }: DashboardWorkspaceProps) {
               <div className={styles.routing_panel}>
                 {selectedNeed ? (
                   <>
+                    {latestDecision ? (
+                      <section className={styles.latest_handoff}>
+                        <div>
+                          <span>Latest handoff</span>
+                          <strong>{latestDecision.provider}</strong>
+                          <p>{latestDecision.reasons}</p>
+                        </div>
+                        <b>{latestDecision.score}</b>
+                      </section>
+                    ) : null}
                     <div className={styles.selected_need}>
                       <span>{selectedNeed.needCategory} request</span>
                       <strong>{selectedNeed.person}</strong>
@@ -284,9 +298,14 @@ export function DashboardWorkspace({ data }: DashboardWorkspaceProps) {
                     </div>
                     <div className={styles.candidate_list}>
                       {rankedCandidates.map((candidate, index) => (
-                        <article className={styles.candidate} key={candidate.service.id}>
+                        <article
+                          className={`${styles.candidate} ${
+                            index === 0 ? styles.candidate_recommended : ""
+                          }`}
+                          key={candidate.service.id}
+                        >
                           <div>
-                            <span>Option {index + 1}</span>
+                            <span>{index === 0 ? "Recommended route" : `Backup ${index}`}</span>
                             <strong>{candidate.service.name}</strong>
                             <p>
                               {candidate.service.neighborhood} - {candidate.service.serviceType}
@@ -486,7 +505,7 @@ function SubmitDemoNeedButton() {
 
   return (
     <button className={styles.ghost_button} disabled={pending} type="submit">
-      {pending ? "Adding..." : "Add live need"}
+      {pending ? "Adding..." : "Simulate request"}
     </button>
   );
 }
