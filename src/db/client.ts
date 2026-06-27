@@ -43,6 +43,10 @@ export async function getDb() {
 }
 
 async function getConnectionOptions() {
+  if (process.env.CIVIC_PULSE_FORCE_DEMO === "1") {
+    return null;
+  }
+
   if (process.env.DATABASE_URL) {
     return process.env.DATABASE_URL;
   }

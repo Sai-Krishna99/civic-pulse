@@ -4,7 +4,12 @@ import { randomUUID } from "crypto";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getDb } from "@/db/client";
-import { providerUpdates, providers, serviceCapacities } from "@/db/schema";
+import {
+  providerUpdates,
+  providers,
+  referrals,
+  serviceCapacities
+} from "@/db/schema";
 
 export async function updateProviderCapacity(formData: FormData) {
   const db = await getDb();
@@ -44,6 +49,55 @@ export async function updateProviderCapacity(formData: FormData) {
     id: `upd-${randomUUID()}`,
     providerId: provider.id,
     message: `${providerName} ${direction} ${Math.abs(change)} units; ${nextAvailable} remain available.`,
+    happenedAt: new Date()
+  });
+
+  try {
+    revalidatePath("/");
+  } catch {
+    // Allows the action to be exercised from scripts outside a Next request.
+  }
+}
+
+export async function createReferral(formData: FormData) {
+  const db = await getDb();
+
+  if (!db) {
+    return;
+  }
+
+  const person = String(formData.get("person") ?? "").trim();
+  const needCategory = String(formData.get("needCategory") ?? "").trim();
+  const need = String(formData.get("need") ?? "").trim();
+  const ownerProviderId = String(formData.get("ownerProviderId") ?? "").trim();
+
+  if (!person || !need || !ownerProviderId) {
+    return;
+  }
+
+  const [provider] = await db
+    .select({ id: providers.id, name: providers.name })
+    .from(providers)
+    .where(eq(providers.id, ownerProviderId))
+    .limit(1);
+
+  if (!provider) {
+    return;
+  }
+
+  await db.insert(referrals).values({
+    id: `ref-${randomUUID()}`,
+    person,
+    need: `${needCategory}: ${need}`,
+    status: "Offered",
+    ownerProviderId: provider.id,
+    createdAt: new Date()
+  });
+
+  await db.insert(providerUpdates).values({
+    id: `upd-${randomUUID()}`,
+    providerId: provider.id,
+    message: `Referral opened for ${person} and routed to ${provider.name}.`,
     happenedAt: new Date()
   });
 

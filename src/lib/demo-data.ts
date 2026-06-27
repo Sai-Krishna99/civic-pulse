@@ -1,48 +1,60 @@
 export type ServiceStatus = "open" | "filling" | "full" | "stale";
 
 export const services: Array<{
+  id: string;
   name: string;
   neighborhood: string;
+  serviceType: string;
   capacity: number;
   available: number;
   status: ServiceStatus;
   verified: string;
 }> = [
   {
+    id: "eastside-cooling-hall",
     name: "Eastside Cooling Hall",
     neighborhood: "Govalle",
+    serviceType: "Cooling center",
     capacity: 80,
     available: 18,
     status: "filling",
     verified: "6 min ago"
   },
   {
+    id: "hope-food-pantry",
     name: "Hope Food Pantry",
     neighborhood: "Chestnut",
+    serviceType: "Food pantry",
     capacity: 120,
     available: 9,
     status: "filling",
     verified: "11 min ago"
   },
   {
+    id: "riverside-family-clinic",
     name: "Riverside Family Clinic",
     neighborhood: "Riverside",
+    serviceType: "Walk-in clinic",
     capacity: 36,
     available: 14,
     status: "open",
     verified: "18 min ago"
   },
   {
+    id: "north-loop-legal-aid",
     name: "North Loop Legal Aid",
     neighborhood: "North Loop",
+    serviceType: "Legal aid",
     capacity: 20,
     available: 0,
     status: "full",
     verified: "28 min ago"
   },
   {
+    id: "st-mark-transit-vouchers",
     name: "St. Mark Transit Vouchers",
     neighborhood: "Mueller",
+    serviceType: "Transit vouchers",
     capacity: 60,
     available: 42,
     status: "open",

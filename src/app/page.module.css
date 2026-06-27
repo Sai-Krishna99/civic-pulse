@@ -49,17 +49,25 @@
   gap: 8px;
 }
 
-.nav a {
+.nav a,
+.nav button {
   display: flex;
   align-items: center;
   gap: 10px;
+  width: 100%;
+  border: 0;
   border-radius: 8px;
+  background: transparent;
   color: var(--muted);
+  font: inherit;
   font-weight: 700;
   padding: 11px 12px;
+  text-align: left;
+  cursor: pointer;
 }
 
 .nav a:hover,
+.nav button:hover,
 .nav_active {
   background: #eef4ef;
   color: var(--ink) !important;
@@ -157,7 +165,11 @@
 
 .actions button,
 .panel_header button,
-.primary_button {
+.primary_button,
+.referral_form input,
+.referral_form select,
+.referral_form textarea,
+.search_box {
   display: inline-flex;
   min-height: 42px;
   align-items: center;
@@ -171,6 +183,18 @@
   padding: 0 14px;
 }
 
+.actions button,
+.panel_header button,
+.primary_button {
+  cursor: pointer;
+}
+
+.actions button:disabled,
+.primary_button:disabled {
+  cursor: wait;
+  opacity: 0.68;
+}
+
 .actions button:not(.primary_button) {
   width: 42px;
   padding: 0;
@@ -180,6 +204,12 @@
   border-color: var(--ink) !important;
   background: var(--ink) !important;
   color: #ffffff !important;
+}
+
+.filter_active {
+  border-color: var(--green) !important;
+  background: var(--green-soft) !important;
+  color: var(--green) !important;
 }
 
 .metrics {
@@ -313,6 +343,47 @@
   padding: 18px;
 }
 
+.referral_form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: auto;
+  padding: 18px;
+}
+
+.referral_form label {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.referral_form label > span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.referral_form input,
+.referral_form select,
+.referral_form textarea {
+  width: 100%;
+  justify-content: flex-start;
+  font: inherit;
+}
+
+.referral_form textarea {
+  min-height: 86px;
+  padding-block: 12px;
+  resize: vertical;
+}
+
+.full_width,
+.referral_form .match_result,
+.referral_form .primary_button {
+  grid-column: 1 / -1;
+}
+
 .input_like,
 .match_result {
   display: flex;
@@ -341,6 +412,57 @@
   display: grid;
   grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr) minmax(280px, 0.7fr);
   gap: 18px;
+}
+
+.board_controls {
+  display: grid;
+  gap: 12px;
+  padding: 0 18px 14px;
+}
+
+.search_box {
+  justify-content: flex-start;
+  background: #ffffff;
+}
+
+.search_box input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-weight: 700;
+  outline: 0;
+}
+
+.segmented_control {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0 18px 14px;
+}
+
+.board_controls .segmented_control {
+  padding: 0;
+}
+
+.segmented_control button {
+  min-height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #ffffff;
+  color: var(--muted);
+  cursor: pointer;
+  font-weight: 900;
+  padding: 0 12px;
+}
+
+.segmented_control button:hover,
+.segment_active {
+  border-color: var(--green) !important;
+  background: var(--green-soft) !important;
+  color: var(--green) !important;
 }
 
 .live_badge {
@@ -535,6 +657,17 @@
   line-height: 1.35;
 }
 
+.empty_state {
+  margin: 0;
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
+  padding: 16px;
+  text-align: center;
+}
+
 @media (max-width: 1120px) {
   .shell {
     grid-template-columns: 1fr;
@@ -608,7 +741,8 @@
   }
 
   .metrics,
-  .lower_grid {
+  .lower_grid,
+  .referral_form {
     grid-template-columns: 1fr;
   }
 

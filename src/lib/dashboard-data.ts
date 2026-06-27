@@ -29,8 +29,10 @@ export async function getDashboardData() {
 
   const serviceRows = await db
     .select({
+      id: providers.id,
       name: providers.name,
       neighborhood: providers.neighborhood,
+      serviceType: providers.serviceType,
       capacity: serviceCapacities.capacity,
       available: serviceCapacities.available,
       status: serviceCapacities.status,
@@ -77,6 +79,8 @@ export async function getDashboardData() {
     source: "database" as const
   };
 }
+
+export type DashboardData = Awaited<ReturnType<typeof getDashboardData>>;
 
 function formatRelativeMinutes(date: Date) {
   const minutes = Math.max(1, Math.round((Date.now() - date.getTime()) / 60000));
