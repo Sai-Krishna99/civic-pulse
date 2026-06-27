@@ -55,6 +55,7 @@ export async function getDashboardData() {
 
   const updateRows = await db
     .select({
+      id: providerUpdatesTable.id,
       provider: providers.name,
       message: providerUpdatesTable.message,
       happenedAt: providerUpdatesTable.happenedAt

@@ -99,21 +99,25 @@ export const referrals = [
 
 export const providerUpdates = [
   {
+    id: "upd-hope-food-pantry",
     time: "4m",
     provider: "Hope Food Pantry",
     message: "Dropped from 22 to 9 food boxes after school pickup surge."
   },
   {
+    id: "upd-eastside-cooling-hall",
     time: "7m",
     provider: "Eastside Cooling Hall",
     message: "Added 12 seats after volunteer shift extension."
   },
   {
+    id: "upd-north-loop-legal-aid",
     time: "14m",
     provider: "North Loop Legal Aid",
     message: "Marked full; referrals are now routed to remote intake."
   },
   {
+    id: "upd-riverside-family-clinic",
     time: "21m",
     provider: "Riverside Family Clinic",
     message: "Confirmed walk-in capacity for children and seniors."

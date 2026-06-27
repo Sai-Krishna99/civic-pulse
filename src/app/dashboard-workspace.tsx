@@ -430,7 +430,7 @@ export function DashboardWorkspace({ data }: DashboardWorkspaceProps) {
             </div>
             <div className={styles.update_list}>
               {providerUpdates.map((update) => (
-                <article className={styles.update} key={`${update.provider}-${update.time}-${update.message}`}>
+                <article className={styles.update} key={update.id}>
                   <span>{update.time}</span>
                   <strong>{update.provider}</strong>
                   <p>{update.message}</p>
