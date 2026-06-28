@@ -563,6 +563,11 @@
   padding-left: 18px;
 }
 
+.candidate strong {
+  display: block;
+  margin-top: 4px;
+}
+
 .candidate form {
   grid-column: 1 / -1;
 }
