@@ -10,7 +10,9 @@
     "typecheck": "tsc --noEmit",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
-    "db:seed": "tsx scripts/seed.ts"
+    "db:seed": "tsx scripts/seed.ts",
+    "db:token": "tsx scripts/dsql-token.ts",
+    "db:check": "tsx scripts/dsql-check.ts"
   },
   "dependencies": {
     "@aws-sdk/dsql-signer": "^3.1075.0",

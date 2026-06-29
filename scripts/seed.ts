@@ -1,6 +1,7 @@
 import { loadEnvConfig } from "@next/env";
 import postgres from "postgres";
 import { drizzle } from "drizzle-orm/postgres-js";
+import { DsqlSigner } from "@aws-sdk/dsql-signer";
 import {
   incomingNeeds,
   neighborhoodSignals,
@@ -13,19 +14,53 @@ import {
 
 loadEnvConfig(process.cwd());
 
-const databaseUrl = process.env.DATABASE_URL;
+async function createConnection() {
+  if (process.env.DATABASE_URL) {
+    return postgres(process.env.DATABASE_URL, { max: 1, prepare: false });
+  }
 
-if (!databaseUrl) {
-  throw new Error("DATABASE_URL is required to seed the database.");
+  if (process.env.DSQL_HOST) {
+    const region = process.env.DSQL_REGION ?? process.env.AWS_REGION ?? "us-east-1";
+    const password =
+      process.env.DSQL_AUTH_TOKEN ??
+      (await new DsqlSigner({
+        hostname: process.env.DSQL_HOST,
+        region,
+        expiresIn: 3600
+      }).getDbConnectAdminAuthToken());
+
+    return postgres({
+      host: process.env.DSQL_HOST,
+      port: 5432,
+      database: process.env.DSQL_DATABASE ?? "postgres",
+      username: process.env.DSQL_USER ?? "admin",
+      password,
+      ssl: "require",
+      max: 1,
+      prepare: false
+    });
+  }
+
+  throw new Error(
+    "Set DATABASE_URL, or DSQL_HOST (with AWS_PROFILE / DSQL_AUTH_TOKEN), to seed the database."
+  );
 }
-
-const client = postgres(databaseUrl, { max: 1, prepare: false });
-const db = drizzle(client);
 
 const now = new Date();
 const minutesAgo = (minutes: number) => new Date(now.getTime() - minutes * 60000);
 
 async function main() {
+  const client = await createConnection();
+  const db = drizzle(client);
+
+  try {
+    return await runSeed(db);
+  } finally {
+    await client.end();
+  }
+}
+
+async function runSeed(db: ReturnType<typeof drizzle>) {
   await db.delete(routingDecisions);
   await db.delete(providerUpdates);
   await db.delete(referrals);
@@ -253,12 +288,10 @@ function getProviderId(providersByName: Map<string, string>, name: string) {
 }
 
 main()
-  .then(async () => {
-    await client.end();
+  .then(() => {
     console.log("Seeded Civic Pulse demo data.");
   })
-  .catch(async (error: unknown) => {
-    await client.end();
+  .catch((error: unknown) => {
     console.error(error);
     process.exit(1);
   });
