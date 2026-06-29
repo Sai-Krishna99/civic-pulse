@@ -181,7 +181,7 @@ sequenceDiagram
     Eng-->>App: ranked list + reasons
     App-->>C: recommended + backups (explained)
     C->>App: route the referral
-    App->>DSQL: write referral, decision and audit; decrement capacity, mark need routed
+    App->>DSQL: write referral, decision and audit, then decrement capacity and mark need routed
     App-->>C: queue updates, capacity drops, audit trail grows
 ```
 
